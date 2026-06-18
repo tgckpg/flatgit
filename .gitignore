@@ -2,6 +2,7 @@
 /dist/
 out/
 bin/
+build.env.work
 *.test
 *.out
 *.swp
