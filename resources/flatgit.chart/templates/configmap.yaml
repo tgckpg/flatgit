@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "flatgit.fullname" . }}-config
+  labels:
+    {{- include "flatgit.labels" . | nindent 4 }}
+data:
+  config.json: |
+    {
+      "addr": {{ .Values.flatgit.addr | quote }},
+      "data_dir": {{ .Values.flatgit.dataDir | quote }},
+      "public_url": {{ .Values.flatgit.publicUrl | quote }},
+      "webhook": {
+        "secret_env": "FLATGIT_WEBHOOK_SECRET"
+      },
+      "git": {
+        "command": {{ .Values.flatgit.git.command | quote }},
+        "clone_timeout": {{ .Values.flatgit.git.cloneTimeout | quote }},
+        "fetch_timeout": {{ .Values.flatgit.git.fetchTimeout | quote }}
+      },
+      "render": {
+        "workers": {{ .Values.flatgit.render.workers }},
+        "max_commits": {{ .Values.flatgit.render.maxCommits }}
+      },
+      "repos": {{ .Values.flatgit.repos | toJson }}
+    }

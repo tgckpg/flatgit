@@ -33,6 +33,10 @@ RUN if [ -n "${APT_PROXY}" ]; then \
       echo "Acquire::http::Proxy \"http://${APT_PROXY}\";" > /etc/apt/apt.conf.d/01proxy; \
     fi
 
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends git ca-certificates \
+ && rm -rf /var/lib/apt/lists/*
+
 COPY --from=build /src/bin/flatgit /usr/local/bin/flatgit
 COPY --from=build /out/tmp /tmp
 

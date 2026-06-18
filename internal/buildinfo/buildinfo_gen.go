@@ -2,6 +2,6 @@ package buildinfo
 
 const (
     Version     = "dev"
-    GitRevision = "b5be7ec12ae5b4b0075f0f9bea40aca17fa904ff"
-    Timestamp   = "20260618.203511"
+    GitRevision = "34c40f8839cd8ead6a3e4900d67abf0feea76ea7"
+    Timestamp   = "20260618.204600"
 )

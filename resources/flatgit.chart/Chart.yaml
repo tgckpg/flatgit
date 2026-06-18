@@ -1,0 +1,6 @@
+apiVersion: v2
+name: flatgit
+description: Static Git web generator with webhook updates
+type: application
+version: 0.1.0
+appVersion: "dev"

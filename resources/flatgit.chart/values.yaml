@@ -1,0 +1,56 @@
+replicaCount: 1
+
+image:
+  repository: ghcr.io/tgckpg/flatgit
+  tag: dev
+  pullPolicy: Always
+
+timezone: Asia/Tokyo
+
+service:
+  type: ClusterIP
+  port: 8080
+
+persistence:
+  enabled: true
+  size: 5Gi
+  storageClassName: ""
+
+webhook:
+  secret: change-me
+
+flatgit:
+  addr: ":8080"
+  dataDir: /var/lib/flatgit
+  publicUrl: "http://127.0.0.1:8080"
+
+  git:
+    command: git
+    cloneTimeout: 120s
+    fetchTimeout: 120s
+
+  render:
+    workers: 1
+    maxCommits: 500
+
+  repos:
+    - name: penguin/tinyproxy
+      owner: penguin
+      description: flatgit stub repo
+      url: https://github.com/tgckpg/flatgit.git
+      defaultBranch: main
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 128Mi
+  limits:
+    cpu: "1"
+    memory: 512Mi
+
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 10001
+  runAsGroup: 10001
+  fsGroup: 10001
+  fsGroupChangePolicy: OnRootMismatch
