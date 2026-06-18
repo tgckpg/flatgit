@@ -54,41 +54,19 @@ jobs:
     steps:
       - *checkout
 
-      - &set_build_version
-        name: Set build version
-        id: set_build_version
+      - name: Set image name
         shell: bash
         run: |
           set -eu
-
-          if [ "${GITHUB_REF_TYPE:-}" = "tag" ]; then
-            BUILD_VER="${GITHUB_REF_NAME}"
-          else
-            BUILD_VER="dev-${GITHUB_SHA::12}"
-          fi
-
-          echo "BUILD_VER=${BUILD_VER}" >> "$GITHUB_ENV"
-          echo "build_ver=${BUILD_VER}" >> "$GITHUB_OUTPUT"
-          echo "Build version: ${BUILD_VER}"
-
-      - &set_image_name
-        name: Set image name
-        shell: bash
-        run: |
-          set -eu
-
           image="ghcr.io/${GITHUB_REPOSITORY}"
           image="${image,,}"
-
           echo "IMAGE_NAME=${image}" >> "$GITHUB_ENV"
           echo "Image name: ${image}"
 
-      - &setup_buildx
-        name: Set up Docker Buildx
+      - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
 
-      - &login_ghcr
-        name: Login to GHCR
+      - name: Login to GHCR
         uses: docker/login-action@v4
         with:
           registry: ghcr.io
@@ -101,8 +79,8 @@ jobs:
         with:
           images: ${{ env.IMAGE_NAME }}
           tags: |
-            type=raw,value=${{ env.BUILD_VER }}-debian-slim
-            type=raw,value=latest-debian-slim,enable=${{ startsWith(github.ref, 'refs/tags/v') }}
+            type=raw,value=${{ github.ref_name }}-debian-slim
+            type=raw,value=latest-debian-slim
 
       - name: Build and push image
         uses: docker/build-push-action@v7
@@ -111,7 +89,5 @@ jobs:
           file: ./dockerfiles/github.Dockerfile
           platforms: linux/amd64,linux/arm64
           push: true
-          build-args: |
-            BUILD_VER=${{ env.BUILD_VER }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}

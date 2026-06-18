@@ -4,7 +4,6 @@ FROM golang:1.26-trixie AS build
 
 ARG TARGETOS
 ARG TARGETARCH
-ARG BUILD_VER=dev
 
 WORKDIR /src
 
@@ -24,7 +23,6 @@ RUN --mount=type=cache,target=/go/pkg/mod \
     GOARCH=${TARGETARCH:-amd64} \
     go build \
       -trimpath \
-      -ldflags="-s -w -X main.version=${BUILD_VER}" \
       -o /out/bin/flatgit \
       ./cmd/flatgit
 
