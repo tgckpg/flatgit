@@ -74,7 +74,7 @@ func NewManifest(repo config.Repo, defaultBranch string, defaultCommit string) M
 			DefaultBranch:  defaultBranch,
 			DefaultCommit:  defaultCommit,
 			DefaultRefSlug: refSlug(repo.DefaultBranch),
-			SitePath:       "/" + repo.Slug() + "/",
+			SitePath:       repo.RepoBase(),
 		},
 		Human: ManifestHumanRoutes{
 			Index: "./index.html",

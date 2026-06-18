@@ -145,25 +145,56 @@ func daemonCmd(log *slog.Logger, args []string) error {
 	})
 }
 
+func repoMatches(repo config.Repo, name string) bool {
+	name = strings.TrimSpace(name)
+	name = strings.Trim(name, "/")
+
+	if name == "" {
+		return true
+	}
+
+	fullName := strings.Trim(repo.FullName(), "/")
+	repoBase := strings.Trim(repo.RepoBase(), "/")
+
+	return strings.EqualFold(repo.Name, name) ||
+		strings.EqualFold(fullName, name) ||
+		strings.EqualFold(repoBase, name)
+}
+
 func renderConfigured(ctx context.Context, log *slog.Logger, cfg *config.Config, repoName string, fetch bool) error {
 	git := gitcmd.New(cfg.Git.Command)
 	r := render.New(git, cfg.PublicURL, cfg.Render.MaxCommits)
+
+	matched := false
+
 	for i := range cfg.Repos {
 		repo := cfg.Repos[i]
-		if repoName != "" && !strings.EqualFold(repo.Name, repoName) && !strings.EqualFold(repo.Slug(), repoName) && !strings.EqualFold(repo.FullName(), repoName) {
+
+		if repoName != "" && !repoMatches(repo, repoName) {
 			continue
 		}
-		log.Info("rendering repo", "repo", repo.FullName())
+
+		matched = true
+
+		log.Info("rendering repo", "repo", repo.FullName(), "base", repo.RepoBase())
+
 		if fetch {
 			if err := git.EnsureMirror(ctx, repo, cfg.CloneTimeout(), cfg.FetchTimeout()); err != nil {
 				return err
 			}
 		}
+
 		if err := r.RenderRepo(ctx, repo); err != nil {
 			return err
 		}
-		log.Info("rendered repo", "repo", repo.FullName(), "output", repo.OutputDir)
+
+		log.Info("rendered repo", "repo", repo.FullName(), "base", repo.RepoBase(), "output", repo.OutputDir)
 	}
+
+	if repoName != "" && !matched {
+		return fmt.Errorf("repo not configured: %s", repoName)
+	}
+
 	return nil
 }
 

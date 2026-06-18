@@ -3,6 +3,7 @@
 out/
 bin/
 build.env.work
+values.work.yaml
 *.test
 *.out
 *.swp

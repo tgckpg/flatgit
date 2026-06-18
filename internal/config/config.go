@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
@@ -43,6 +44,9 @@ type Repo struct {
 	MirrorDir     string `json:"mirror_dir"`
 	OutputDir     string `json:"output_dir"`
 	Description   string `json:"description"`
+
+	fullName string
+	repoBase string
 }
 
 func Load(path string) (*Config, error) {
@@ -103,10 +107,10 @@ func (c *Config) ApplyDefaults() error {
 			r.DefaultBranch = "main"
 		}
 		if r.MirrorDir == "" {
-			r.MirrorDir = filepath.Join(c.DataDir, "repos", r.Slug()+".git")
+			r.MirrorDir = filepath.Join(c.DataDir, "repos", r.RepoBase()+".git")
 		}
 		if r.OutputDir == "" {
-			r.OutputDir = filepath.Join(c.DataDir, "www", r.Slug())
+			r.OutputDir = filepath.Join(c.DataDir, "www", r.RepoBase())
 		}
 	}
 	return nil
@@ -124,39 +128,52 @@ func (c *Config) WebRoot() string {
 	return filepath.Join(c.DataDir, "www")
 }
 
-func (c *Config) RepoByName(name string) (*Repo, bool) {
-	name = cleanName(name)
-	for i := range c.Repos {
-		if c.Repos[i].Name == name || c.Repos[i].Slug() == name || c.Repos[i].FullName() == name {
-			return &c.Repos[i], true
+func (c Config) RepoByName(name string) (*Repo, bool) {
+	for _, repo := range c.Repos {
+		if repo.FullName() == name || repo.Name == name {
+			return &repo, true
 		}
 	}
-	return nil, false
+	return &Repo{}, false
 }
 
-func (c *Config) RepoByWebhookName(fullName string) (*Repo, bool) {
-	fullName = strings.TrimSpace(fullName)
-	for i := range c.Repos {
-		r := &c.Repos[i]
-		if fullName == r.FullName() || fullName == r.Name || fullName == r.Slug() {
-			return r, true
+func (c Config) RepoByWebhookName(name string) (Repo, bool) {
+	for _, repo := range c.Repos {
+		if repo.FullName() == name {
+			return repo, true
+		}
+
+		// Fallback for single-owner or old/simple configs.
+		if repo.Name == name {
+			return repo, true
 		}
 	}
-	return nil, false
-}
 
-func (r Repo) Slug() string {
-	if r.Owner == "" {
-		return cleanName(r.Name)
-	}
-	return cleanName(r.Owner + "_" + r.Name)
+	return Repo{}, false
 }
 
 func (r Repo) FullName() string {
+	if r.fullName != "" {
+		return r.fullName
+	}
+
 	if r.Owner == "" {
 		return r.Name
 	}
+
 	return r.Owner + "/" + r.Name
+}
+
+func (r Repo) RepoBase() string {
+	if r.repoBase != "" {
+		return r.repoBase
+	}
+
+	if r.Owner == "" {
+		return "/" + url.PathEscape(r.Name) + "/"
+	}
+
+	return "/" + url.PathEscape(r.Owner) + "/" + url.PathEscape(r.Name) + "/"
 }
 
 func parseDuration(s string, fallback time.Duration) time.Duration {
