@@ -82,7 +82,7 @@ func NewManifest(repo config.Repo, defaultBranch string, defaultCommit string) M
 			Refs:  "./refs.html",
 		},
 		Machine: ManifestAPIRoutes{
-			Self:    "./flatgit.json",
+			Self:    "./manifest.json",
 			Refs:    "./refs.json",
 			Commits: "./commits.json",
 			Tree:    "./tree/{ref}.json",
