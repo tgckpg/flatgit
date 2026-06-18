@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+
+Sitemap: /sitemap.xml
+Flatgit: /.well-known/flatgit.json

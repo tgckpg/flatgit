@@ -1,0 +1,8 @@
+/flatgit
+/dist/
+out/
+bin/
+*.test
+*.out
+*.swp
+.DS_Store

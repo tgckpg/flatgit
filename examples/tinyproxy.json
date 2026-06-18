@@ -1,0 +1,26 @@
+{
+  "addr": ":8080",
+  "data_dir": "./out/datadir",
+  "public_url": "https://git.example.com",
+  "webhook": {
+    "secret": "change-me"
+  },
+  "git": {
+    "command": "git",
+    "clone_timeout": "2m",
+    "fetch_timeout": "2m"
+  },
+  "render": {
+    "workers": 2,
+    "max_commits": 500
+  },
+  "repos": [
+    {
+      "owner": "penguin",
+      "name": "tinyproxy",
+      "url": "https://github.com/tgckpg/tinyproxy",
+      "default_branch": "main",
+      "description": "tinyporxy source tree"
+    }
+  ]
+}
