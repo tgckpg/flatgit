@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -16,13 +17,17 @@ import (
 
 type Runner struct {
 	GitCommand string
+	Logger     *slog.Logger
 }
 
-func New(command string) *Runner {
-	if command == "" {
-		command = "git"
+func New(gitCommand string, logger *slog.Logger) *Runner {
+	if gitCommand == "" {
+		gitCommand = "git"
 	}
-	return &Runner{GitCommand: command}
+	return &Runner{
+		GitCommand: gitCommand,
+		Logger:     logger,
+	}
 }
 
 func (r *Runner) EnsureMirror(ctx context.Context, repo config.Repo, cloneTimeout, fetchTimeout time.Duration) error {
@@ -69,19 +74,57 @@ func (r *Runner) EnsureMirror(ctx context.Context, repo config.Repo, cloneTimeou
 func (r *Runner) Output(ctx context.Context, dir string, args ...string) ([]byte, error) {
 	cmd := exec.CommandContext(ctx, r.GitCommand, args...)
 	cmd.Env = os.Environ()
+
 	if dir != "" {
 		cmd.Dir = dir
 	}
+
+	if r.Logger != nil {
+		r.Logger.Debug("git command started",
+			"dir", cmd.Dir,
+			"cmd", r.GitCommand,
+			"args", args,
+		)
+	}
+
+	start := time.Now()
+
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
+
 	if err := cmd.Run(); err != nil {
+		dur := time.Since(start)
 		msg := strings.TrimSpace(stderr.String())
 		if msg == "" {
 			msg = err.Error()
 		}
+
+		if r.Logger != nil {
+			r.Logger.Warn("git command failed",
+				"dir", cmd.Dir,
+				"cmd", r.GitCommand,
+				"args", args,
+				"dur", dur,
+				"stdout_bytes", stdout.Len(),
+				"stderr", msg,
+			)
+		}
+
 		return stdout.Bytes(), fmt.Errorf("git %s: %s", strings.Join(args, " "), msg)
 	}
+
+	if r.Logger != nil {
+		r.Logger.Debug("git command finished",
+			"dir", cmd.Dir,
+			"cmd", r.GitCommand,
+			"args", args,
+			"dur", time.Since(start),
+			"stdout_bytes", stdout.Len(),
+			"stderr_bytes", stderr.Len(),
+		)
+	}
+
 	return stdout.Bytes(), nil
 }
 

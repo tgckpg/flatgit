@@ -22,14 +22,33 @@ import (
 )
 
 func main() {
-	log := slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{}))
-	if err := run(log, os.Args); err != nil {
+	var level slog.LevelVar
+	level.Set(slog.LevelInfo)
+
+	log := slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{
+		Level: &level,
+	}))
+
+	if err := run(log, &level, os.Args); err != nil {
 		log.Error("flatgit failed", "err", err)
 		os.Exit(1)
 	}
 }
 
-func run(log *slog.Logger, args []string) error {
+func applyVerbosity(level *slog.LevelVar, v int) {
+	if v >= 1 {
+		level.Set(slog.LevelDebug)
+		return
+	}
+
+	level.Set(slog.LevelInfo)
+}
+
+func addCommonFlags(fs *flag.FlagSet) *int {
+	return fs.Int("v", 0, "verbosity level")
+}
+
+func run(log *slog.Logger, level *slog.LevelVar, args []string) error {
 	if len(args) < 2 {
 		usage(args[0])
 		return errors.New("missing command")
@@ -41,7 +60,7 @@ func run(log *slog.Logger, args []string) error {
 	case "serve":
 		return serveCmd(log, args[2:])
 	case "daemon":
-		return daemonCmd(log, args[2:])
+		return daemonCmd(log, level, args[2:])
 	case "version", "-v", "--version":
 		fmt.Printf("%s (%s)\n", buildinfo.Version, buildinfo.Timestamp)
 		return nil
@@ -99,13 +118,15 @@ func serveCmd(log *slog.Logger, args []string) error {
 	return server.ListenAndServe(ctx, server.Options{Addr: *addr, Root: *root, Logger: log})
 }
 
-func daemonCmd(log *slog.Logger, args []string) error {
+func daemonCmd(log *slog.Logger, level *slog.LevelVar, args []string) error {
 	fs := flag.NewFlagSet("daemon", flag.ExitOnError)
 	cfgPath := fs.String("c", "flatgit.json", "config file")
+	v := addCommonFlags(fs)
 	renderOnStart := fs.Bool("render-on-start", true, "render all repos on startup")
 	if err := fs.Parse(args); err != nil {
 		return err
 	}
+	applyVerbosity(level, *v)
 	cfg, err := config.Load(*cfgPath)
 	if err != nil {
 		return err
@@ -114,7 +135,7 @@ func daemonCmd(log *slog.Logger, args []string) error {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
-	git := gitcmd.New(cfg.Git.Command)
+	git := gitcmd.New(cfg.Git.Command, log)
 	r := render.New(git, cfg.PublicURL, cfg.Render.MaxCommits)
 	q := jobqueue.New(1024, log)
 	q.Start(ctx, cfg.Render.Workers, func(ctx context.Context, name string) error {
@@ -162,7 +183,7 @@ func repoMatches(repo config.Repo, name string) bool {
 }
 
 func renderConfigured(ctx context.Context, log *slog.Logger, cfg *config.Config, repoName string, fetch bool) error {
-	git := gitcmd.New(cfg.Git.Command)
+	git := gitcmd.New(cfg.Git.Command, log)
 	r := render.New(git, cfg.PublicURL, cfg.Render.MaxCommits)
 
 	matched := false
