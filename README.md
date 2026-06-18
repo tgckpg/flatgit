@@ -2,6 +2,8 @@
 
 `flatgit` is a static Git web generator with webhook-driven updates and an optional built-in file server.
 
+[Demo](https://sgit.k8s.astropenguin.net/tgckpg/flatgit/)
+
 ## Install
 
 via helm
