@@ -58,8 +58,8 @@ flatgit:
     maxCommits: 500
 
   repos:
-    - name: penguin/tinyproxy
-      owner: penguin
+    - name: flatgit
+      owner: tgckpg
       description: flatgit stub repo
       url: https://github.com/tgckpg/flatgit.git
       defaultBranch: main
