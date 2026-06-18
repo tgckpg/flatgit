@@ -2,6 +2,15 @@
 
 `flatgit` is a static Git web generator with webhook-driven updates and an optional built-in file server.
 
+## Install
+
+via helm
+```
+helm show values ./resources/flatgit.chart/ > values.yaml
+edit values.yaml
+helm upgrade --install -n <NAMESPACE> <RELEASE_NAME> ./resources/flatgit.chart/ -f values.yaml
+```
+
 ## Philosophy
 
 Git repo in, static browsable site out.
