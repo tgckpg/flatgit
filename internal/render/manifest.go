@@ -22,15 +22,14 @@ type ManifestGenerator struct {
 }
 
 type ManifestRepository struct {
-	Name           string    `json:"name"`
-	FullName       string    `json:"fullname"`
-	Owner          string    `json:"owner,omitempty"`
-	Description    string    `json:"description,omitempty"`
-	DefaultBranch  string    `json:"default_branch"`
-	DefaultCommit  string    `json:"default_commit"`
-	DefaultRefSlug string    `json:"default_ref_slug"`
-	SitePath       string    `json:"site_path"`
-	GeneratedAt    time.Time `json:"generated_at"`
+	Name           string `json:"name"`
+	FullName       string `json:"fullname"`
+	Owner          string `json:"owner,omitempty"`
+	Description    string `json:"description,omitempty"`
+	DefaultBranch  string `json:"default_branch"`
+	DefaultCommit  string `json:"default_commit"`
+	DefaultRefSlug string `json:"default_ref_slug"`
+	SitePath       string `json:"site_path"`
 }
 
 type ManifestHumanRoutes struct {

@@ -1,6 +1,10 @@
 # flatgit
 
-`flatgit` is a static Git web generator with webhook-driven updates and an optional built-in file server.
+A static Git web generator with webhook-driven updates and an optional built-in file server.
+
+The main goal for this projects is to make bots and agents's life easier. Also to relief the stress on them crawling the [forge](https://en.wikipedia.org/wiki/Forge_(software)) platform interfaces.
+
+Each repository have a `manifest.json` that lists all available navigation paths.
 
 [Demo](https://sgit.k8s.astropenguin.net/tgckpg/flatgit/)
 

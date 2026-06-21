@@ -65,7 +65,10 @@ const refsTemplate = `{{define "pageTitle"}}{{.RepoManifest.Repository.FullName}
 <table>
 <tr><th>kind</th><th>name</th><th>commit</th></tr>
 {{range .Refs}}
-<tr><td><span class="pill">{{.Kind}}</span></td><td class="mono">{{.Short}}</td><td class="mono">{{.Commit}}</td></tr>
+<tr>
+<td><span class="pill">{{.Kind}}</span></td>
+<td class="mono"><a href="{{$.RepoManifest.Repository.SitePath}}commit/{{.Commit}}.html">{{.Short}}</a></td>
+<td class="mono"><a href="{{$.RepoManifest.Repository.SitePath}}commit/{{.Commit}}.html">{{.Commit}}</a></td></tr>
 {{end}}
 </table>
 {{end}}
