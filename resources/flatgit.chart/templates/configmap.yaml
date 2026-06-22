@@ -6,6 +6,17 @@ metadata:
     {{- include "flatgit.labels" . | nindent 4 }}
 data:
   config.json: |
+    {{- $repos := list -}}
+    {{- range .Values.flatgit.repos }}
+    {{- $repo := dict
+      "name" .name
+      "owner" .owner
+      "description" .description
+      "url" .url
+      "default_branch" .defaultBranch
+    -}}
+    {{- $repos = append $repos $repo -}}
+    {{- end }}
     {
       "addr": {{ .Values.flatgit.addr | quote }},
       "data_dir": {{ .Values.flatgit.dataDir | quote }},
@@ -22,5 +33,5 @@ data:
         "workers": {{ .Values.flatgit.render.workers }},
         "max_commits": {{ .Values.flatgit.render.maxCommits }}
       },
-      "repos": {{ .Values.flatgit.repos | toJson }}
+      "repos": {{ $repos | toJson }}
     }
