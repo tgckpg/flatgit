@@ -1,6 +1,8 @@
 package render
 
 import (
+	"path"
+	"strings"
 	"time"
 
 	"github.com/tgckpg/flatgit/internal/config"
@@ -30,6 +32,7 @@ type ManifestRepository struct {
 	DefaultCommit  string `json:"default_commit"`
 	DefaultRefSlug string `json:"default_ref_slug"`
 	SitePath       string `json:"site_path"`
+	OwnerSitePath  string `json:"owner_site_path"`
 }
 
 type ManifestHumanRoutes struct {
@@ -74,6 +77,7 @@ func NewManifest(repo config.Repo, defaultBranch string, defaultCommit string) M
 			DefaultCommit:  defaultCommit,
 			DefaultRefSlug: refSlug(repo.DefaultBranch),
 			SitePath:       repo.RepoBase(),
+			OwnerSitePath:  path.Dir(strings.TrimSuffix(repo.RepoBase(), "/")),
 		},
 		Human: ManifestHumanRoutes{
 			Index: "./index.html",

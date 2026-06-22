@@ -19,7 +19,7 @@
       "owner": "penguin",
       "name": "tinyproxy",
       "url": "https://github.com/tgckpg/tinyproxy",
-      "default_branch": "main",
+      "default_branch": "master",
       "description": "tinyporxy source tree"
     }
   ]

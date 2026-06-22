@@ -13,7 +13,9 @@ const layoutTemplate = `{{define "layout"}}<!doctype html>
 </head>
 <body>
 <header>
-<h1><a href="{{.RepoManifest.Repository.SitePath}}">{{.RepoManifest.Repository.FullName}}</a></h1>
+<h1>
+<a href="{{.RepoManifest.Repository.OwnerSitePath}}">{{.RepoManifest.Repository.Owner}}</a>/<a href="{{.RepoManifest.Repository.SitePath}}">{{.RepoManifest.Repository.Name}}</a>
+</h1>
 {{if .RepoManifest.Repository.Description}}<p class="muted">{{.RepoManifest.Repository.Description}}</p>{{end}}
 <nav>
 <a href="{{.RepoManifest.Repository.SitePath}}">summary</a>
