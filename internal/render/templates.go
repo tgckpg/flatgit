@@ -21,7 +21,7 @@ const layoutTemplate = `{{define "layout"}}<!doctype html>
 <a href="{{.RepoManifest.Repository.SitePath}}">summary</a>
 <a href="{{.RepoManifest.Repository.SitePath}}log.html">log</a>
 <a href="{{.RepoManifest.Repository.SitePath}}refs.html">refs</a>
-<a href="{{.RepoManifest.Repository.SitePath}}tree/{{.RepoManifest.Repository.DefaultRefSlug}}/index.html">files</a>
+<a href="{{.RepoManifest.Repository.SitePath}}tree/{{.Ref}}/index.html">files</a>
 <a href="{{.RepoManifest.Repository.SitePath}}manifest.json" title="express view for bots and agents">json</a>
 </nav>
 </header>
@@ -94,7 +94,7 @@ const treeTemplate = `{{define "pageTitle"}}{{.RepoManifest.Repository.FullName}
 <table>
 <tr><th>mode</th><th>type</th><th>path</th><th>size</th></tr>
 {{range .Files}}
-<tr><td class="mono">{{.Mode}}</td><td>{{.Type}}</td><td class="mono"><a href="{{$.RepoManifest.Repository.SitePath}}blob/{{$.RepoManifest.Repository.DefaultRefSlug}}/{{.Path}}.html">{{.Path}}</a></td><td>{{.Size}}</td></tr>
+<tr><td class="mono">{{.Mode}}</td><td>{{.Type}}</td><td class="mono"><a href="{{$.RepoManifest.Repository.SitePath}}blob/{{$.Ref}}/{{.Path}}.html">{{.Path}}</a></td><td>{{.Size}}</td></tr>
 {{end}}
 </table>
 {{end}}

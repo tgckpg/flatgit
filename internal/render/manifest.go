@@ -2,7 +2,6 @@ package render
 
 import (
 	"path"
-	"strings"
 	"time"
 
 	"github.com/tgckpg/flatgit/internal/config"
@@ -36,19 +35,22 @@ type ManifestRepository struct {
 }
 
 type ManifestHumanRoutes struct {
-	Index string `json:"index"`
-	Log   string `json:"log"`
-	Refs  string `json:"refs"`
+	Index  string `json:"index"`
+	Log    string `json:"log"`
+	Refs   string `json:"refs"`
+	Tree   string `json:"tree"`
+	Blob   string `json:"blob"`
+	Commit string `json:"commit"`
 }
 
 type ManifestAPIRoutes struct {
-	Self    string `json:"self"`
-	Refs    string `json:"refs"`
-	Commits string `json:"commits"`
-	Tree    string `json:"tree"`
-	Commit  string `json:"commit"`
-	Blob    string `json:"blob"`
-	Raw     string `json:"raw"`
+	Self    string  `json:"self"`
+	Refs    string  `json:"refs"`
+	Commits string  `json:"commits"`
+	Tree    string  `json:"tree"`
+	Commit  string  `json:"commit"`
+	Blob    *string `json:"blob,omitempty"`
+	Raw     string  `json:"raw"`
 }
 
 type ManifestCapabilities struct {
@@ -77,20 +79,23 @@ func NewManifest(repo config.Repo, defaultBranch string, defaultCommit string) M
 			DefaultCommit:  defaultCommit,
 			DefaultRefSlug: refSlug(repo.DefaultBranch),
 			SitePath:       repo.RepoBase(),
-			OwnerSitePath:  path.Dir(strings.TrimSuffix(repo.RepoBase(), "/")),
+			OwnerSitePath:  path.Dir(repo.RepoBase()),
 		},
 		Human: ManifestHumanRoutes{
-			Index: "./index.html",
-			Log:   "./log.html",
-			Refs:  "./refs.html",
+			Index:  "./index.html",
+			Log:    "./log.html",
+			Refs:   "./refs.html",
+			Tree:   "./tree/{ref}/",
+			Blob:   "./blob/{ref}/{path}.html",
+			Commit: "./commit/{sha}.html",
 		},
 		Machine: ManifestAPIRoutes{
 			Self:    "./manifest.json",
 			Refs:    "./refs.json",
 			Commits: "./commits.json",
-			Tree:    "./tree/{ref}.json",
+			Tree:    "./tree/{ref}/tree.json",
 			Commit:  "./commit/{sha}.json",
-			Blob:    "./blob/{ref}/{path}.json",
+			Blob:    nil,
 			Raw:     "./raw/{ref}/{path}",
 		},
 		Capabilities: ManifestCapabilities{

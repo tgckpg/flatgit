@@ -87,14 +87,53 @@ func ListenAndServe(ctx context.Context, opts Options) error {
 	}
 }
 
+func clientIP(r *http.Request) string {
+	if xff := r.Header.Get("X-Forwarded-For"); xff != "" {
+		parts := strings.Split(xff, ",")
+		if len(parts) > 0 {
+			if ip := strings.TrimSpace(parts[0]); ip != "" {
+				return ip
+			}
+		}
+	}
+
+	if xrip := strings.TrimSpace(r.Header.Get("X-Real-IP")); xrip != "" {
+		return xrip
+	}
+
+	return ""
+}
+
 func logRequests(log *slog.Logger, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if strings.HasPrefix(r.URL.Path, "/healthz") {
 			next.ServeHTTP(w, r)
 			return
 		}
+
 		start := time.Now()
 		next.ServeHTTP(w, r)
-		log.Info("http request", "method", r.Method, "path", r.URL.Path, "remote", r.RemoteAddr, "dur", time.Since(start))
+
+		args := []any{
+			"method", r.Method,
+			"path", r.URL.Path,
+			"remote", r.RemoteAddr,
+		}
+
+		if ip := clientIP(r); ip != "" {
+			args = append(args, "client_ip", ip)
+		}
+
+		if xff := strings.TrimSpace(r.Header.Get("X-Forwarded-For")); xff != "" {
+			args = append(args, "x_forwarded_for", xff)
+		}
+
+		if xrip := strings.TrimSpace(r.Header.Get("X-Real-IP")); xrip != "" {
+			args = append(args, "x_real_ip", xrip)
+		}
+
+		args = append(args, "dur", time.Since(start))
+
+		log.Info("http request", args...)
 	})
 }

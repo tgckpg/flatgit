@@ -13,7 +13,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-	"unicode/utf8"
 
 	"github.com/tgckpg/flatgit/internal/config"
 	"github.com/tgckpg/flatgit/internal/gitcmd"
@@ -107,7 +106,14 @@ func (r *Renderer) RenderRepo(ctx context.Context, repo config.Repo) error {
 		return err
 	}
 
-	page := basePage{RepoManifest: manifest, GeneratedAt: manifest.GeneratedAt.Format(time.RFC3339)}
+	branchSlug := refSlug(repo.DefaultBranch)
+
+	page := basePage{
+		RepoManifest: manifest,
+		Ref:          branchSlug,
+		GeneratedAt:  manifest.GeneratedAt.Format(time.RFC3339),
+	}
+
 	if err := renderTemplate(filepath.Join(next, "index.html"), indexTemplate, struct {
 		basePage
 		Refs    []RefInfo
@@ -129,56 +135,43 @@ func (r *Renderer) RenderRepo(ctx context.Context, repo config.Repo) error {
 		return err
 	}
 
-	branchSlug := refSlug(repo.DefaultBranch)
-	if err := renderTemplate(filepath.Join(next, "tree", branchSlug, "index.html"), treeTemplate, struct {
-		basePage
-		Ref   string
-		Files []TreeEntry
-	}{page, repo.DefaultBranch, tree}); err != nil {
+	if err := r.renderCommitFiles(ctx, repo, next, commit, branchSlug, repo.DefaultBranch, page); err != nil {
 		return err
 	}
 
 	for _, c := range commits {
-		show, err := r.Git.Text(ctx, repo.MirrorDir, "show", "--date=iso-strict-local", "--stat", "--patch", "--find-renames", "--no-ext-diff", "--no-color", c.Hash)
+		show, err := r.Git.Text(
+			ctx,
+			repo.MirrorDir,
+			"show",
+			"--date=iso-strict-local",
+			"--stat",
+			"--patch",
+			"--find-renames",
+			"--no-ext-diff",
+			"--no-color",
+			c.Hash,
+		)
 		if err != nil {
 			return err
 		}
+
+		commitPage := page
+		commitPage.Ref = c.Hash
+
 		if err := renderTemplate(filepath.Join(next, "commit", c.Hash+".html"), commitTemplate, struct {
 			basePage
 			Commit CommitInfo
 			Show   string
-		}{page, c, show}); err != nil {
+		}{commitPage, c, show}); err != nil {
 			return err
 		}
+
 		if err := writeJSON(filepath.Join(next, "commit", c.Hash+".json"), c); err != nil {
 			return err
 		}
-	}
 
-	for _, e := range tree {
-		if e.Type != "blob" {
-			continue
-		}
-		content, err := r.Git.Output(ctx, repo.MirrorDir, "show", "--date=iso-strict-local", commit+":"+e.Path)
-		if err != nil {
-			return err
-		}
-		rawPath := filepath.Join(next, "raw", branchSlug, filepath.FromSlash(e.Path))
-		if err := writeFile(rawPath, content, 0o644); err != nil {
-			return err
-		}
-
-		blobPath := filepath.Join(next, "blob", branchSlug, filepath.FromSlash(e.Path)+".html")
-		blob := blobView{Path: e.Path, Size: int64(len(content)), RawHref: relPath(filepath.Dir(blobPath), rawPath)}
-		if len(content) > maxBlobHTMLBytes || bytes.IndexByte(content, 0) >= 0 || !utf8.Valid(content) {
-			blob.Binary = true
-		} else {
-			blob.Text = string(content)
-		}
-		if err := renderTemplate(blobPath, blobTemplate, struct {
-			basePage
-			Blob blobView
-		}{page, blob}); err != nil {
+		if err := r.renderCommitFiles(ctx, repo, next, c.Hash, c.Hash, c.Hash, page); err != nil {
 			return err
 		}
 	}
@@ -285,6 +278,7 @@ func (r *Renderer) tree(ctx context.Context, repo config.Repo, ref string) ([]Tr
 
 type basePage struct {
 	RepoManifest Manifest
+	Ref          string
 	GeneratedAt  string
 }
 

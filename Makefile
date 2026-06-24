@@ -60,7 +60,7 @@ fmt:
 	gofmt -w ./cmd ./internal
 
 run: build
-	$(BIN_DIR)/flatgit daemon -c examples/tinyproxy.json --v=2
+	$(BIN_DIR)/flatgit daemon -c examples/tinyproxy.json
 
 vet:
 	go vet ./...

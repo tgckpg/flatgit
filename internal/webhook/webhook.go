@@ -44,9 +44,15 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	log := h.Logger
 
 	if log != nil {
+
+		xff := r.Header.Get("X-Forwarded-For")
+		xrealip := r.Header.Get("X-Real-IP")
+
 		log.Info("webhook request",
 			"method", r.Method,
 			"path", r.URL.Path,
+			"x_forwarded_for", xff,
+			"x_real_ip", xrealip,
 			"remote", r.RemoteAddr,
 			"event", r.Header.Get("X-Gitea-Event"),
 			"content_type", r.Header.Get("Content-Type"),
