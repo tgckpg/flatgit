@@ -114,14 +114,27 @@ func (r *Renderer) RenderRepo(ctx context.Context, repo config.Repo) error {
 		GeneratedAt:  manifest.GeneratedAt.Format(time.RFC3339),
 	}
 
-	if err := renderTemplate(filepath.Join(next, "index.html"), indexTemplate, struct {
-		basePage
-		Refs    []RefInfo
-		Commits []CommitInfo
-		Files   []TreeEntry
-	}{page, refs, firstCommits(commits, 20), firstTree(tree, 50)}); err != nil {
+	readmeHTML, err := r.renderReadmeHTML(ctx, repo, commit, tree)
+	if err != nil {
 		return err
 	}
+
+	if err := renderTemplate(filepath.Join(next, "index.html"), indexTemplate, struct {
+		basePage
+		Refs       []RefInfo
+		Commits    []CommitInfo
+		Files      []TreeEntry
+		ReadmeHTML template.HTML
+	}{
+		page,
+		refs,
+		firstCommits(commits, 3),
+		firstTree(tree, 50),
+		readmeHTML,
+	}); err != nil {
+		return err
+	}
+
 	if err := renderTemplate(filepath.Join(next, "refs.html"), refsTemplate, struct {
 		basePage
 		Refs []RefInfo
@@ -193,6 +206,51 @@ func (r *Renderer) resolveDefaultCommit(ctx context.Context, repo config.Repo) (
 		last = err
 	}
 	return "", last
+}
+
+func (r *Renderer) renderReadmeHTML(
+	ctx context.Context,
+	repo config.Repo,
+	commit string,
+	tree []TreeEntry,
+) (template.HTML, error) {
+	readmePath := findReadmePath(tree)
+	if readmePath == "" {
+		return "", nil
+	}
+
+	content, err := r.blob(ctx, repo, commit, readmePath)
+	if err != nil {
+		return "", err
+	}
+
+	htmlBytes, err := renderMarkdownSafe(content)
+	if err != nil {
+		return "", err
+	}
+
+	return template.HTML(htmlBytes), nil
+}
+
+func (r *Renderer) blob(
+	ctx context.Context,
+	repo config.Repo,
+	commit string,
+	path string,
+) ([]byte, error) {
+	spec := fmt.Sprintf("%s:%s", commit, path)
+
+	content, err := r.Git.Output(
+		ctx,
+		repo.MirrorDir,
+		"show",
+		spec,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("read blob %s at %s: %w", path, commit, err)
+	}
+
+	return content, nil
 }
 
 func (r *Renderer) refs(ctx context.Context, repo config.Repo) ([]RefInfo, error) {
@@ -283,11 +341,13 @@ type basePage struct {
 }
 
 type blobView struct {
-	Path    string
-	Size    int64
-	RawHref string
-	Text    string
-	Binary  bool
+	Path             string
+	Size             int64
+	RawHref          string
+	Text             string
+	Binary           bool
+	HTML             template.HTML
+	RenderedMarkdown bool
 }
 
 func writeStatic(root string) error {

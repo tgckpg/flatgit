@@ -58,6 +58,13 @@ const indexTemplate = `{{define "pageTitle"}}{{.RepoManifest.Repository.FullName
 <tr><td class="mono"><a href="{{$.RepoManifest.Repository.SitePath}}blob/{{$.RepoManifest.Repository.DefaultRefSlug}}/{{.Path}}.html">{{.Path}}</a></td><td>{{.Size}}</td></tr>
 {{end}}
 </table>
+
+{{if .ReadmeHTML}}
+<section class="readme">
+  {{.ReadmeHTML}}
+</section>
+{{end}}
+
 {{end}}
 `
 
@@ -119,7 +126,15 @@ const blobTemplate = `{{define "pageTitle"}}{{.RepoManifest.Repository.FullName}
 {{if .Blob.Binary}}
 <p>Binary or large file; HTML preview skipped.</p>
 {{else}}
-<pre>{{.Blob.Text}}</pre>
+
+{{if .Blob.RenderedMarkdown}}
+<article class="markdown-body">
+{{.Blob.HTML}}
+</article>
+{{else}}
+<pre><code>{{.Blob.Text}}</code></pre>
+{{end}}
+
 {{end}}
 {{end}}
 `

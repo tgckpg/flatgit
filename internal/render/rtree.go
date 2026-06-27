@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"html/template"
 	"io"
 	"io/fs"
 	"os"
@@ -166,6 +167,16 @@ func (r *Renderer) renderBlobEntry(
 		blob.Binary = true
 	} else {
 		blob.Text = string(content)
+	}
+
+	if !blob.Binary && isMarkdownPath(blob.Path) {
+		htmlBytes, err := renderMarkdownSafe(content)
+		if err != nil {
+			return err
+		}
+
+		blob.HTML = template.HTML(htmlBytes)
+		blob.RenderedMarkdown = true
 	}
 
 	if err := renderTemplate(blobPath, blobTemplate, struct {
