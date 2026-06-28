@@ -30,10 +30,51 @@ func New(gitCommand string, logger *slog.Logger) *Runner {
 	}
 }
 
+func (r *Runner) waitRemoteLive(ctx context.Context, url string, timeout time.Duration) error {
+	const attempts = 5
+
+	backoff := 500 * time.Millisecond
+
+	var lastErr error
+
+	for i := 0; i < attempts; i++ {
+		probeCtx, cancel := context.WithTimeout(ctx, timeout)
+
+		_, err := r.Output(probeCtx, "", "ls-remote", "--heads", url)
+
+		cancel()
+
+		if err == nil {
+			return nil
+		}
+
+		lastErr = err
+
+		if i == attempts-1 {
+			break
+		}
+
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case <-time.After(backoff):
+		}
+
+		backoff *= 2
+	}
+
+	return lastErr
+}
+
 func (r *Runner) EnsureMirror(ctx context.Context, repo config.Repo, cloneTimeout, fetchTimeout time.Duration) error {
 	if repo.URL == "" {
 		return fmt.Errorf("repo %s has no url", repo.FullName())
 	}
+
+	if err := r.waitRemoteLive(ctx, repo.URL, fetchTimeout); err != nil {
+		return fmt.Errorf("repo %s remote not reachable: %w", repo.FullName(), err)
+	}
+
 	lockPath := repo.MirrorDir + ".lock"
 	unlock, err := acquireLock(lockPath)
 	if err != nil {
@@ -44,10 +85,12 @@ func (r *Runner) EnsureMirror(ctx context.Context, repo config.Repo, cloneTimeou
 	if isGitDir(repo.MirrorDir) {
 		ctx, cancel := context.WithTimeout(ctx, fetchTimeout)
 		defer cancel()
+
 		_, err := r.Output(ctx, repo.MirrorDir, "remote", "update", "--prune")
 		if err != nil {
 			return err
 		}
+
 		_, _ = r.Output(context.Background(), repo.MirrorDir, "pack-refs", "--all", "--prune")
 		return nil
 	}
@@ -55,19 +98,25 @@ func (r *Runner) EnsureMirror(ctx context.Context, repo config.Repo, cloneTimeou
 	if err := os.MkdirAll(filepath.Dir(repo.MirrorDir), 0o755); err != nil {
 		return err
 	}
+
 	tmp := repo.MirrorDir + ".tmp"
 	_ = os.RemoveAll(tmp)
+
 	ctx, cancel := context.WithTimeout(ctx, cloneTimeout)
 	defer cancel()
+
 	if _, err := r.Output(ctx, "", "clone", "--mirror", repo.URL, tmp); err != nil {
 		_ = os.RemoveAll(tmp)
 		return err
 	}
+
 	_ = os.RemoveAll(repo.MirrorDir)
+
 	if err := os.Rename(tmp, repo.MirrorDir); err != nil {
 		_ = os.RemoveAll(tmp)
 		return err
 	}
+
 	return nil
 }
 
