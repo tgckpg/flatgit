@@ -6,7 +6,7 @@ The main goal for this projects is to make bots and agents's life easier. Also t
 
 Each repository have a `manifest.json` that lists all available navigation paths.
 
-[Demo](https://sgit.k8s.astropenguin.net/tgckpg/flatgit/)
+[Demo](https://sgit.k8s.astropenguin.net/penguin/flatgit/)
 
 ## Install
 
