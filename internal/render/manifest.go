@@ -106,7 +106,7 @@ func NewManifest(repo config.Repo, defaultBranch string, defaultCommit string) M
 			BlobMetadata: false,
 			RawBlobs:     true,
 			Search:       false,
-			Archive:      false,
+			Archive:      true,
 		},
 		GeneratedAt: time.Now(),
 	}

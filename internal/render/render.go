@@ -152,6 +152,10 @@ func (r *Renderer) RenderRepo(ctx context.Context, repo config.Repo) error {
 		return err
 	}
 
+	if err := r.renderArchive(ctx, repo, next, commit, branchSlug); err != nil {
+		return err
+	}
+
 	for _, c := range commits {
 		show, err := r.Git.Text(
 			ctx,

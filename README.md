@@ -46,7 +46,7 @@ HTML should be served by proper http server if possible. The built-in server is 
   - blob view
   - commit patch view
 - JSON files:
-  - `flatgit.json`
+  - `manifest.json`
   - `refs.json`
   - `commits.json`
   - `tree.json`
@@ -145,10 +145,7 @@ The HMAC is SHA-256 over the raw request body.
 
 ## TODO
 
-- Add README rendering
 - Add syntax highlighting, probably with a tiny vendored/highlight-free first pass
 - Improve branch/tag URL escaping
-- Render per-branch trees instead of only the default branch
-- Add archive links
 - Add repo index page at the web-root
 - Add tests using temporary local Git repos

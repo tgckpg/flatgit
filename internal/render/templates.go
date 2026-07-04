@@ -23,6 +23,7 @@ const layoutTemplate = `{{define "layout"}}<!doctype html>
 <a href="{{.RepoManifest.Repository.SitePath}}refs.html">refs</a>
 <a href="{{.RepoManifest.Repository.SitePath}}tree/{{.Ref}}/index.html">files</a>
 <a href="{{.RepoManifest.Repository.SitePath}}manifest.json" title="express view for bots and agents">json</a>
+<a href="{{.RepoManifest.Repository.SitePath}}archive/{{.RepoManifest.Repository.DefaultRefSlug}}.zip">zip ({{.RepoManifest.Repository.DefaultRefSlug}})</a>
 </nav>
 </header>
 <main>
