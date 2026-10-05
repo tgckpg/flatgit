@@ -163,6 +163,8 @@ func daemonCmd(log *slog.Logger, level *slog.LevelVar, args []string) error {
 		WebhookMux: func(mux *http.ServeMux) {
 			wh.Register(mux)
 		},
+		GitCommand: cfg.Git.Command,
+		Repos:      cfg.Repos,
 	})
 }
 

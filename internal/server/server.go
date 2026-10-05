@@ -8,6 +8,8 @@ import (
 	"path"
 	"strings"
 	"time"
+
+	"github.com/tgckpg/flatgit/internal/config"
 )
 
 type Options struct {
@@ -15,6 +17,9 @@ type Options struct {
 	Root       string
 	Logger     *slog.Logger
 	WebhookMux func(*http.ServeMux)
+
+	GitCommand string
+	Repos      []config.Repo
 }
 
 func withCacheHeaders(next http.Handler) http.Handler {
@@ -53,7 +58,21 @@ func ListenAndServe(ctx context.Context, opts Options) error {
 		opts.WebhookMux(mux)
 	}
 	fs := http.FileServer(http.Dir(opts.Root))
-	mux.Handle("/", withCacheHeaders(fs))
+	static := withCacheHeaders(fs)
+
+	git := newGitHTTP(
+		opts.GitCommand,
+		opts.Repos,
+		opts.Logger,
+	)
+
+	mux.Handle("/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if git.ServeHTTP(w, r) {
+			return
+		}
+
+		static.ServeHTTP(w, r)
+	}))
 
 	srv := &http.Server{
 		Addr:              opts.Addr,
