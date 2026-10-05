@@ -40,6 +40,12 @@ func newGitHTTP(
 	for _, repo := range repos {
 		base := strings.TrimSuffix(repo.RepoBase(), "/")
 
+		g.logger.Info(
+			"register git repository",
+			"base", base,
+			"mirror", repo.MirrorDir,
+		)
+
 		g.repos[base] = repo.MirrorDir
 
 		// Supporting the conventional .git form is basically free.
@@ -64,6 +70,15 @@ func (g *gitHTTP) ServeHTTP(w http.ResponseWriter, r *http.Request) bool {
 
 		base := strings.TrimSuffix(path, "/info/refs")
 		mirror, ok := g.repos[base]
+
+		g.logger.Info(
+			"git info refs lookup",
+			"path", path,
+			"base", base,
+			"found", ok,
+			"mirror", mirror,
+		)
+
 		if !ok {
 			return false
 		}

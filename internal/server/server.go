@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/tgckpg/flatgit/internal/buildinfo"
 	"github.com/tgckpg/flatgit/internal/config"
 )
 
@@ -81,7 +82,12 @@ func ListenAndServe(ctx context.Context, opts Options) error {
 	}
 
 	errCh := make(chan error, 1)
-	opts.Logger.Info("flatgit serving", "addr", opts.Addr, "root", opts.Root)
+	opts.Logger.Info("flatgit serving",
+		"addr", opts.Addr, "root", opts.Root,
+		"version", buildinfo.Version,
+		"gitrev", buildinfo.GitRevision,
+		"Timestamp", buildinfo.Timestamp,
+	)
 
 	go func() {
 		errCh <- srv.ListenAndServe()

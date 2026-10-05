@@ -53,6 +53,9 @@ push: .buildinfo
 		-t $(IMAGE_NAME):$(IMAGE_TAG) \
 		--push .
 
+image-info:
+	docker buildx imagetools inspect $(IMAGE_NAME):$(IMAGE_TAG)
+
 test:
 	go test ./...
 
